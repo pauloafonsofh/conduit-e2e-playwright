@@ -1,0 +1,19 @@
+{
+  "name": "conduit-e2e-playwright",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Smoke suite for the Conduit app with mutants that prove each test catches a defect.",
+  "license": "MIT",
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test --project=smoke",
+    "test:mutants": "playwright test --project=mutants",
+    "test:harness": "node scripts/verify-harness.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^20.19.43",
+    "typescript": "^5.9.3"
+  }
+}
