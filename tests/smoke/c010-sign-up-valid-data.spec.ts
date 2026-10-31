@@ -7,7 +7,6 @@ import { smokeCase } from '../../support/smoke-case';
 import { expect } from '../../support/fixtures';
 import { uniqueName } from '../../support/api';
 import { Header } from '../../pages/header';
-import { SignInPage } from '../../pages/sign-in-page';
 import { SignUpPage } from '../../pages/sign-up-page';
 import { signUpSavesOtherUsername, newEmailRejectedAsTaken } from '../../mutants/sign-up';
 
@@ -16,8 +15,14 @@ smokeCase(
   'User should be able to sign up with valid data in all fields',
   { mutants: [signUpSavesOtherUsername, newEmailRejectedAsTaken] },
   async ({ page }) => {
-    // TODO(Paulo): steps and assertions.
-    // New user data: build it with uniqueName() from support/api, so parallel runs never collide.
-    // Mutants: keep at least one; each must make an assertion fail (see mutants/sign-up.ts).
+    const header = new Header(page);
+    const signUp = new SignUpPage(page);
+    const username = uniqueName();
+    const newUser = { username, email: `${username}@example.com`, password: `Pw-${uniqueName('x')}-9` };
+    await signUp.open();
+    await signUp.signUp(newUser);
+    await expect(page).not.toHaveURL(/\/register\/?$/);
+    await expect(header.userLink(newUser.username)).toBeVisible();
+    await expect(header.userLink(newUser.username)).toHaveText(newUser.username);
   },
 );
