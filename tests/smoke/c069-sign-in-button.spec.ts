@@ -7,7 +7,6 @@ import { smokeCase } from '../../support/smoke-case';
 import { expect } from '../../support/fixtures';
 import { Header } from '../../pages/header';
 import { SignInPage } from '../../pages/sign-in-page';
-import { SignUpPage } from '../../pages/sign-up-page';
 import { signInReturnsOtherUser, validCredentialsRejected } from '../../mutants/sign-in';
 
 smokeCase(
@@ -15,8 +14,12 @@ smokeCase(
   'User should be able to sign in by clicking the [Sign in] button',
   { mutants: [signInReturnsOtherUser, validCredentialsRejected] },
   async ({ page, user }) => {
-    // TODO(Paulo): steps and assertions.
-    // user: a registered user created by the API (user.email, user.password, user.username).
-    // Mutants: keep at least one; each must make an assertion fail (see mutants/sign-in.ts).
+    const header = new Header(page);
+    const signIn = new SignInPage(page);
+    await signIn.open();
+    await signIn.signIn(user.email, user.password);
+    await expect(page).not.toHaveURL(/\/login\/?$/);
+    await expect(header.userLink(user.username)).toBeVisible();
+    await expect(header.userLink(user.username)).toHaveText(user.username);
   },
 );
