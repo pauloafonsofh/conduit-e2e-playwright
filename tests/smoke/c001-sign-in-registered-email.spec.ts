@@ -12,5 +12,21 @@
 // Expected result:
 //   - User is logged in.
 //   - Username is displayed in the header.
-//
-// smokeCase(...) is added in the area task. TODO(Paulo): steps and assertions.
+
+import { smokeCase } from '../../support/smoke-case';
+import { expect } from '../../support/fixtures';
+import { Header } from '../../pages/header';
+import { SignInPage } from '../../pages/sign-in-page';
+import { SignUpPage } from '../../pages/sign-up-page';
+import { signInReturnsOtherUser, validCredentialsRejected } from '../../mutants/sign-in';
+
+smokeCase(
+  'C1',
+  'User should be able to sign in with a registered email and a valid password',
+  { mutants: [signInReturnsOtherUser, validCredentialsRejected] },
+  async ({ page, user }) => {
+    // TODO(Paulo): steps and assertions.
+    // user: a registered user created by the API (user.email, user.password, user.username).
+    // Mutants: keep at least one; each must make an assertion fail (see mutants/sign-in.ts).
+  },
+);

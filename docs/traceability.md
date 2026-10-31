@@ -5,7 +5,7 @@ Each case has one test file. The mutant columns are filled in as each area is au
 
 | TestRail ID | Title | Area | Test file | Mutant(s) | Simulated defect | Notes |
 |---|---|---|---|---|---|---|
-| C1 | User should be able to sign in with a registered email and a valid password | Sign In | [`c001-sign-in-registered-email.spec.ts`](../tests/smoke/c001-sign-in-registered-email.spec.ts) |  |  | Jira CON-6 |
+| C1 | User should be able to sign in with a registered email and a valid password | Sign In | [`c001-sign-in-registered-email.spec.ts`](../tests/smoke/c001-sign-in-registered-email.spec.ts) |  |  | Jira CON-6. The site labels the field "Email", not "Email or Username" (checked 31/10/2026) |
 | C46 | Not logged-in user should be able to open the "Sign In" page by clicking the "Sign in" link in the navigation bar | Sign In | [`c046-open-sign-in-from-header.spec.ts`](../tests/smoke/c046-open-sign-in-from-header.spec.ts) |  |  | Title only in TestRail (no steps); the title is the expected result |
 | C69 | User should be able to sign in by clicking the [Sign in] button | Sign In | [`c069-sign-in-button.spec.ts`](../tests/smoke/c069-sign-in-button.spec.ts) |  |  | Title only in TestRail (no steps); the title is the expected result |
 | C5 | Not logged-in user should be able to open the "Sign Up" page by clicking the "Sign up" link in the header | Sign Up | [`c005-open-sign-up-from-header.spec.ts`](../tests/smoke/c005-open-sign-up-from-header.spec.ts) |  |  | Title only in TestRail (no steps); the title is the expected result |

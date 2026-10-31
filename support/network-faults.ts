@@ -36,3 +36,26 @@ export async function tamperDocument(page: Page, url: string | RegExp, edit: (ht
     await route.fulfill({ response, headers: cleanHeaders(response.headers()), body: edit(html) });
   });
 }
+
+/**
+ * Edit the source of every JavaScript file whose URL matches, as if the defect had been
+ * shipped in the front-end build. Used when the behaviour lives only in the client code
+ * (for example, which route a header link opens). If the text to replace is not found,
+ * the request fails: a mutant that can no longer apply must not pass as "caught".
+ */
+export async function tamperScript(page: Page, url: string | RegExp, from: string, to: string): Promise<void> {
+  await page.route(url, async route => {
+    const response = await route.fetch();
+    const source = await response.text();
+    if (!source.includes(from)) {
+      await route.abort();
+      throw new Error(`tamperScript: "${from}" not found in ${route.request().url()}`);
+    }
+    await route.fulfill({ response, headers: cleanHeaders(response.headers()), body: source.replace(from, to) });
+  });
+}
+
+/** Answer every request whose URL matches with a fixed status and JSON body. */
+export async function replyJson(page: Page, url: string | RegExp, status: number, json: unknown): Promise<void> {
+  await page.route(url, route => route.fulfill({ status, json }));
+}
