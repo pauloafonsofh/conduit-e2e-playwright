@@ -6,8 +6,6 @@
 import { smokeCase } from '../../support/smoke-case';
 import { expect } from '../../support/fixtures';
 import { Header } from '../../pages/header';
-import { SignInPage } from '../../pages/sign-in-page';
-import { SignUpPage } from '../../pages/sign-up-page';
 import { signInLinkOpensSignUp, signInLinkWithoutLabel } from '../../mutants/sign-in';
 
 smokeCase(
@@ -15,7 +13,13 @@ smokeCase(
   'Not logged-in user should be able to open the "Sign In" page by clicking the "Sign in" link in the navigation bar',
   { mutants: [signInLinkOpensSignUp, signInLinkWithoutLabel] },
   async ({ page }) => {
-    // TODO(Paulo): steps and assertions.
-    // Mutants: keep at least one; each must make an assertion fail (see mutants/sign-in.ts).
+    const header = new Header(page);
+    await page.goto('/');
+    await expect(header.signInLink).toBeVisible();
+    await expect(header.signInLink).toHaveText('Sign in');
+    await header.signInLink.click();
+    await expect(page).toHaveURL(/\/login\/?$/);
+    await expect(page).toHaveTitle(/^Sign in/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Sign in', exact: true })).toBeVisible();
   },
 );
