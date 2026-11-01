@@ -1,0 +1,53 @@
+name: e2e
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run typecheck
+      - name: Mutant mechanism works (harness)
+        run: npm run test:harness
+      - name: CI summary script works
+        run: npm run test:summary
+
+      # Runs every project: smoke (and infra), mutants and known-bugs.
+      - name: Smoke, mutants and known bugs
+        run: npx playwright test
+
+      - name: Job summary
+        if: always()
+        run: |
+          if [ -f test-results/results.json ]; then
+            node scripts/summary.mjs >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
