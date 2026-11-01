@@ -13,8 +13,8 @@ export class Header {
 
   constructor(readonly page: Page) {
     this.nav = page.getByRole('navigation');
-    this.logo = this.nav.getByRole('link', { name: 'conduit' });
-    this.homeLink = this.nav.getByRole('link', { name: 'Home' });
+    this.logo = this.nav.getByRole('link', { name: 'conduit', exact: true });
+    this.homeLink = this.nav.getByRole('link', { name: 'Home', exact: true });
     this.signInLink = this.nav.getByRole('link', { name: 'Sign in' });
     this.signUpLink = this.nav.getByRole('link', { name: 'Sign up' });
     this.newArticleLink = this.nav.getByRole('link', { name: 'New Article' });
