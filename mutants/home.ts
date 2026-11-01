@@ -18,9 +18,16 @@ const FAVORITE_API = /\/api\/articles\/[^/]+\/favorite$/;
 
 type FeedArticle = { slug: string; title: string; [key: string]: unknown };
 
-/** Each article in the feed takes `field` from the next one, so every preview shows or links the wrong article. */
+/**
+ * Each article in the feed takes `field` from the next one, so every preview shows or links the
+ * wrong article. A feed with a single article (for example a unique tag) has no neighbour: the
+ * slug then points to an article that does not exist, and the title gets a stale suffix.
+ */
 function rotate(articles: FeedArticle[], field: 'slug' | 'title'): FeedArticle[] {
-  if (articles.length < 2) return articles;
+  if (articles.length === 1) {
+    const [only] = articles;
+    return [{ ...only, [field]: field === 'slug' ? `${only.slug}-missing` : `${only.title} (old version)` }];
+  }
   return articles.map((article, i) => ({ ...article, [field]: articles[(i + 1) % articles.length][field] }));
 }
 
