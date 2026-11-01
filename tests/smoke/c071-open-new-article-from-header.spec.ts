@@ -7,7 +7,6 @@ import { smokeCase } from '../../support/smoke-case';
 import { expect } from '../../support/fixtures';
 import { Header } from '../../pages/header';
 import { EditorPage } from '../../pages/editor-page';
-import { ArticlePage } from '../../pages/article-page';
 import { newArticleLinkOpensSettings, newArticleLinkWithoutLabel } from '../../mutants/new-article';
 
 smokeCase(
@@ -15,8 +14,15 @@ smokeCase(
   'Logged-in user should be able to open the "New Article" page by clicking the "New Article" link in the header',
   { mutants: [newArticleLinkOpensSettings, newArticleLinkWithoutLabel] },
   async ({ authedPage }) => {
-    // TODO(Paulo): steps and assertions.
-    // authedPage: a page already signed in as a fresh user (fixture user).
-    // Mutants: keep at least one; each must make an assertion fail (see mutants/new-article.ts).
+    const header = new Header(authedPage);
+    const editor = new EditorPage(authedPage);
+    await authedPage.goto('/');
+    await expect(header.newArticleLink).toBeVisible();
+    await expect(header.newArticleLink).toHaveText('New Article');
+    await header.newArticleLink.click();
+    await expect(authedPage).toHaveURL(/\/editor\/?$/);
+    await expect(authedPage).toHaveTitle(/^New article/);
+    await expect(editor.title).toBeVisible();
+    await expect(editor.body).toBeVisible();
   },
 );
