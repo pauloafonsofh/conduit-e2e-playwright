@@ -4,5 +4,4 @@ playwright-report/
 blob-report/
 harness/test-results/
 harness/report/
-.superpowers/
 .env
