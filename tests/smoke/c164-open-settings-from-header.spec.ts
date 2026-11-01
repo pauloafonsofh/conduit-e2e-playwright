@@ -13,10 +13,19 @@ smokeCase(
   'C164',
   'Logged-in user should be able to open the Settings page by clicking the "Settings" link in the header',
   { mutants: [settingsLinkOpensNewArticle, settingsLinkWithoutLabel] },
-  async ({ authedPage }) => {
-    // TODO(Paulo): steps and assertions.
-    // authedPage: a page already signed in as a fresh user (fixture user).
-    // Settings page: h1 "Your Settings", tab title "Your Settings - Conduit".
-    // Mutants: keep at least one; each must make an assertion fail (see mutants/settings.ts).
+  async ({ authedPage: page, user }) => {
+    const header = new Header(page);
+    const settings = new SettingsPage(page);
+
+    await page.goto('/');
+    await expect(header.userLink(user.username)).toBeVisible();
+    await expect(header.settingsLink).toBeVisible();
+    await expect(header.settingsLink).toHaveText('Settings');
+    await header.settingsLink.click();
+
+    await expect(page).toHaveURL(/\/settings\/?$/);
+    await expect(page).toHaveTitle('Your Settings - Conduit');
+    await expect(page.getByRole('heading', { level: 1, name: 'Your Settings', exact: true })).toBeVisible();
+    await expect(settings.updateButton).toBeVisible();
   },
 );
