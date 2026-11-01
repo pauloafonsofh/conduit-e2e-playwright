@@ -1,9 +1,16 @@
 // Reads the Playwright JSON report and prints a Markdown summary for the CI job page:
 // smoke cases from TestRail, infra tests, mutants caught, known bugs still present, flaky tests.
-// Usage: node scripts/summary.mjs [path to results.json]   (default: test-results/results.json)
-import { readFileSync } from 'node:fs';
+// Only the projects present in the report get a row (each CI job runs one project).
+// With --badges <dir>, it also writes shields.io endpoint files (smoke.json, mutants.json,
+// known-bugs.json), so the README badges show the numbers of the last CI run.
+// Usage: node scripts/summary.mjs [results.json] [--badges <dir>]   (default: test-results/results.json)
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
-const path = process.argv[2] ?? 'test-results/results.json';
+const args = process.argv.slice(2);
+const badgesAt = args.indexOf('--badges');
+const badgesDir = badgesAt >= 0 ? args.splice(badgesAt, 2)[1] : undefined;
+const path = args[0] ?? 'test-results/results.json';
 const report = JSON.parse(readFileSync(path, 'utf8'));
 
 const stripAnsi = text => text.replace(/\x1b\[[0-9;]*m/g, '');
@@ -37,15 +44,19 @@ const knownBugs = tests.filter(t => t.project === 'known-bugs');
 const flaky = tests.filter(t => t.status === 'flaky');
 const issueOf = t => t.annotations.find(a => a.type === 'issue')?.description ?? '';
 
+const rows = [
+  ['Smoke cases (TestRail)', smoke, 'passed'],
+  ['Infra tests', infra, 'passed'],
+  ['Mutants', mutants, 'caught by an assertion'],
+  ['Known bugs still present', knownBugs, ''],
+].filter(([, items]) => items.length > 0);
+
 const lines = [
   '## E2E summary',
   '',
   '| Check | Result |',
   '|---|---|',
-  `| Smoke cases (TestRail) | ${smoke.filter(ok).length}/${smoke.length} passed |`,
-  `| Infra tests | ${infra.filter(ok).length}/${infra.length} passed |`,
-  `| Mutants | ${mutants.filter(ok).length}/${mutants.length} caught by an assertion |`,
-  `| Known bugs still present | ${knownBugs.filter(ok).length}/${knownBugs.length} |`,
+  ...rows.map(([label, items, word]) => `| ${label} | ${items.filter(ok).length}/${items.length}${word ? ` ${word}` : ''} |`),
   `| Flaky (passed on retry) | ${flaky.length} |`,
 ];
 
@@ -65,3 +76,19 @@ section(
 section('Flaky tests', flaky, t => `- [${t.project}] ${t.title}`);
 
 console.log(lines.join('\n'));
+
+if (badgesDir) {
+  const badge = (label, message, good) => ({ schemaVersion: 1, label, message, color: good ? 'brightgreen' : 'red' });
+  const files = {
+    'smoke.json': badge('smoke', `${smoke.filter(ok).length}/${smoke.length} passed`, smoke.length > 0 && smoke.every(ok)),
+    'mutants.json': badge('mutants', `${mutants.filter(ok).length}/${mutants.length} caught`, mutants.length > 0 && mutants.every(ok)),
+    'known-bugs.json': {
+      schemaVersion: 1,
+      label: 'known bugs',
+      message: `${knownBugs.filter(ok).length} open`,
+      color: knownBugs.every(ok) ? 'orange' : 'blue',
+    },
+  };
+  mkdirSync(badgesDir, { recursive: true });
+  for (const [name, content] of Object.entries(files)) writeFileSync(join(badgesDir, name), JSON.stringify(content));
+}

@@ -7,14 +7,19 @@ export default defineConfig({
   globalSetup: './global-setup.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
+  // The target is a public instance shared with other students: keep the load low in CI.
+  workers: process.env.CI ? 2 : undefined,
   reporter: [
     ['list'],
     ['html', { open: 'never' }],
     ['json', { outputFile: 'test-results/results.json' }],
+    // In CI, each job also writes a blob report; the report job merges them into one HTML report.
+    ...(process.env.CI ? [['blob'] as const] : []),
   ],
   use: {
     baseURL: BASE_URL,
     trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
     ...devices['Desktop Chrome'],
   },
   projects: [
@@ -26,6 +31,13 @@ export default defineConfig({
     {
       name: 'mutants',
       grep: /@mutant/,
+      retries: 0,
+    },
+    {
+      // Bugs found in the site, each with a GitHub issue. Tests use test.fail(), so they pass
+      // while the bug exists and fail when it is fixed.
+      name: 'known-bugs',
+      grep: /@known-bug/,
       retries: 0,
     },
   ],
