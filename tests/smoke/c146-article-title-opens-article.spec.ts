@@ -5,8 +5,7 @@
 
 import { smokeCase } from '../../support/smoke-case';
 import { expect } from '../../support/fixtures';
-import { createArticle } from '../../support/api';
-import { Header } from '../../pages/header';
+import { createArticle, uniqueName } from '../../support/api';
 import { HomePage } from '../../pages/home-page';
 import { ArticlePage } from '../../pages/article-page';
 import { previewOpensOtherArticle, previewShowsOtherTitle } from '../../mutants/home';
@@ -16,10 +15,20 @@ smokeCase(
   'User should be redirected to the Article page after clicking the article title in the preview',
   { mutants: [previewOpensOtherArticle, previewShowsOtherTitle] },
   async ({ authedPage, request, user, articles }) => {
-    // TODO(Paulo): steps and assertions.
-    // Test data: create the article with createArticle(request, user) from support/api and call articles.track(article.slug) right away.
-    // Sign in (authedPage) and click homePage.globalFeedTab: the signed-out Home is cached by the server for about 10 seconds and may not show a fresh article.
-    // The preview title reads "Article title: <title>" (visible prefix); homePage.previewTitle(title) already handles it.
-    // Mutants: keep at least one; each must make an assertion fail (see mutants/home.ts).
+    const home = new HomePage(authedPage);
+    const article = new ArticlePage(authedPage);
+    const title = uniqueName('Preview article');
+
+    // Created by the same user as authedPage (both use the `user` fixture of this test).
+    const { slug } = await createArticle(request, user, { title, description: uniqueName('Description'), body: uniqueName('Body') });
+    articles.track(slug);
+
+    await authedPage.goto('/');
+    await expect(home.globalFeedTab).toBeVisible();
+    await home.globalFeedTab.click();
+    await expect(home.previewTitle(title)).toBeVisible();
+    await home.previewTitle(title).click();
+    await expect(authedPage).toHaveURL(new RegExp(`/article/${slug}/?$`));
+    await expect(article.title).toHaveText(title);
   },
 );
