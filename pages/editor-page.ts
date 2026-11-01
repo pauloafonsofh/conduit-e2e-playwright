@@ -19,7 +19,7 @@ export class EditorPage {
     this.description = page.getByRole('textbox', { name: "What's this article about?" });
     this.body = page.getByRole('textbox', { name: 'Write your article (in markdown)' });
     this.tags = page.getByRole('textbox', { name: 'Enter tags' });
-    this.publishButton = page.getByRole('button', { name: 'Publish Article' });
+    this.publishButton = page.getByRole('button', { name: 'Publish Article', exact: true });
     this.errors = page.locator('.error-messages');
   }
 
