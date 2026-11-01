@@ -6,19 +6,25 @@
 import { smokeCase } from '../../support/smoke-case';
 import { expect } from '../../support/fixtures';
 import { uniqueName } from '../../support/api';
-import { Header } from '../../pages/header';
 import { EditorPage } from '../../pages/editor-page';
 import { ArticlePage } from '../../pages/article-page';
+import { publishAndTrack } from '../../support/publish';
 import { publishRedirectsHome, articleTitleTruncated } from '../../mutants/new-article';
 
 smokeCase(
   'C78',
   'User should be redirected to the Article page after the successful publishing',
   { mutants: [publishRedirectsHome, articleTitleTruncated] },
-  async ({ authedPage, user, articles }) => {
-    // TODO(Paulo): steps and assertions.
-    // Article data: build the title with uniqueName() from support/api, so parallel runs never collide. Required fields: title, description, body.
-    // Cleanup: right after reaching the article page, call articles.track(new ArticlePage(authedPage).slug()), so the article is deleted even if a later assertion fails.
-    // Mutants: keep at least one; each must make an assertion fail (see mutants/new-article.ts).
+  async ({ authedPage, articles }) => {
+    const uid = uniqueName();
+    const data = { title: `Smoke C78 redirect ${uid}`, description: `Description ${uid}`, body: `Text ${uid}` };
+    const editor = new EditorPage(authedPage);
+    const article = new ArticlePage(authedPage);
+    await editor.open();
+    const slug = await publishAndTrack(authedPage, articles, data);
+
+    await expect(authedPage).toHaveURL(slug ? new RegExp(`/article/${slug}/?$`) : /\/article\/[^/?#]+\/?$/);
+    await expect(article.title).toHaveText(data.title);
+    await expect(article.body).toHaveText(data.body);
   },
 );
