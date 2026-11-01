@@ -48,7 +48,7 @@ const rows = [
   ['Smoke cases (TestRail)', smoke, 'passed'],
   ['Infra tests', infra, 'passed'],
   ['Mutants', mutants, 'caught by an assertion'],
-  ['Known bugs still present', knownBugs, ''],
+  ['Known-bug tests (bug still present)', knownBugs, ''],
 ].filter(([, items]) => items.length > 0);
 
 const lines = [
@@ -85,7 +85,8 @@ if (badgesDir) {
     'known-bugs.json': {
       schemaVersion: 1,
       label: 'known bugs',
-      message: `${knownBugs.filter(ok).length} open`,
+      // One bug can have several tests (issue #3 has two): count distinct issues, not tests.
+      message: `${new Set(knownBugs.filter(ok).map(issueOf).filter(Boolean)).size} open`,
       color: knownBugs.every(ok) ? 'orange' : 'blue',
     },
   };
