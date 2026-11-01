@@ -1,33 +1,38 @@
-// Header link defects shared by the Sign In and Sign Up areas. The header is server-rendered
-// and then hydrated by React, so each mutant changes both the HTML and the front-end bundle:
+// Header link defects shared by several areas. The header is server-rendered and then
+// hydrated by React, so each mutant changes both the HTML and the front-end bundle:
 // a click before or after hydration meets the same defect.
 import type { Page } from '@playwright/test';
 import { tamperDocument, tamperScript } from '../support/network-faults';
 
-const APP_BUNDLE = /\/_next\/static\/chunks\/pages\/_app-[^/]+\.js$/;
+export const APP_BUNDLE = /\/_next\/static\/chunks\/pages\/_app-[^/]+\.js$/;
 
-const ROUTE_KEY = { login: 'userLogin', register: 'userNew' } as const;
-const LABEL = { login: 'Sign in', register: 'Sign up' } as const;
+// routeKey: name of the route function in the bundle's route table.
+// bundleLabel / bundleEmpty: the link label as written in the bundle, and the same text without the label.
+const LINKS = {
+  login: { routeKey: 'userLogin', path: '/user/login', label: 'Sign in', bundleLabel: '"Sign in"', bundleEmpty: '""' },
+  register: { routeKey: 'userNew', path: '/user/register', label: 'Sign up', bundleLabel: '"Sign up"', bundleEmpty: '""' },
+  newArticle: { routeKey: 'articleNew', path: '/editor', label: 'New Article', bundleLabel: '"\\xa0New Article"', bundleEmpty: '"\\xa0"' },
+  settings: { routeKey: 'userEdit', path: '/settings', label: 'Settings', bundleLabel: '"\\xa0Settings"', bundleEmpty: '"\\xa0"' },
+} as const;
 
-type AuthPage = keyof typeof ROUTE_KEY;
+type HeaderLink = keyof typeof LINKS;
 
-/** The header link that should open `from` opens `to` instead. */
-export async function headerLinkOpens(page: Page, from: AuthPage, to: AuthPage): Promise<void> {
-  const label = LABEL[from];
-  await tamperDocument(page, '**/*', html =>
-    html.replace(new RegExp(`href="/user/${from}">${label}</a>`, 'g'), `href="/user/${to}">${label}</a>`),
-  );
+/** The header link that should open `from` opens the page of `to` instead. */
+export async function headerLinkOpens(page: Page, from: HeaderLink, to: HeaderLink): Promise<void> {
+  const source = LINKS[from];
+  const target = LINKS[to];
+  await tamperDocument(page, '**/*', html => html.replaceAll(`href="${source.path}"`, `href="${target.path}"`));
   await tamperScript(
     page,
     APP_BUNDLE,
-    `${ROUTE_KEY[from]}:function(){return"/user/${from}"}`,
-    `${ROUTE_KEY[from]}:function(){return"/user/${to}"}`,
+    `${source.routeKey}:function(){return"${source.path}"}`,
+    `${source.routeKey}:function(){return"${target.path}"}`,
   );
 }
 
-/** The header shows the link for `which` without its label, so users cannot find it. */
-export async function headerLinkWithoutLabel(page: Page, which: AuthPage): Promise<void> {
-  const label = LABEL[which];
-  await tamperDocument(page, '**/*', html => html.replace(new RegExp(`>${label}</a>`, 'g'), '></a>'));
-  await tamperScript(page, APP_BUNDLE, `children:"${label}"}`, 'children:""}');
+/** The header shows the link without its label, so users cannot find it. */
+export async function headerLinkWithoutLabel(page: Page, which: HeaderLink): Promise<void> {
+  const link = LINKS[which];
+  await tamperDocument(page, '**/*', html => html.replaceAll(`${link.label}</a>`, '</a>'));
+  await tamperScript(page, APP_BUNDLE, link.bundleLabel, link.bundleEmpty);
 }
