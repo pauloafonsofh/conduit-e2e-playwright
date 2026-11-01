@@ -28,5 +28,12 @@ export default defineConfig({
       grep: /@mutant/,
       retries: 0,
     },
+    {
+      // Bugs found in the site, each with a GitHub issue. Tests use test.fail(), so they pass
+      // while the bug exists and fail when it is fixed.
+      name: 'known-bugs',
+      grep: /@known-bug/,
+      retries: 0,
+    },
   ],
 });
