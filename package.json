@@ -9,10 +9,11 @@
     "test:smoke": "playwright test --project=smoke",
     "test:mutants": "playwright test --project=mutants",
     "test:harness": "node scripts/verify-harness.mjs",
+    "test:summary": "node scripts/verify-summary.mjs",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@playwright/test": "^1.64.1",
+    "@playwright/test": "1.64.1",
     "@types/node": "^20.19.43",
     "typescript": "^5.9.3"
   }
