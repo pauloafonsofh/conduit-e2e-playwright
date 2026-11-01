@@ -6,7 +6,6 @@
 import { smokeCase } from '../../support/smoke-case';
 import { expect } from '../../support/fixtures';
 import { Header } from '../../pages/header';
-import { HomePage } from '../../pages/home-page';
 import { SettingsPage } from '../../pages/settings-page';
 import { logoutKeepsSession, logoutHeaderStale } from '../../mutants/settings';
 
@@ -14,10 +13,33 @@ smokeCase(
   'C212',
   'User should be logged out and redirected to the Home page after clicking the [Or click here to logout.] button',
   { mutants: [logoutKeepsSession, logoutHeaderStale] },
-  async ({ authedPage, user }) => {
-    // TODO(Paulo): steps and assertions.
-    // After logout the app opens Home. A signed-out header shows "Sign in" and "Sign up" and no username link.
-    // To prove the session ended, check again after a reload (authedPage signs in only once per tab).
-    // Mutants: keep at least one; each must make an assertion fail (see mutants/settings.ts).
+  async ({ authedPage: page, user }) => {
+    const header = new Header(page);
+    const settings = new SettingsPage(page);
+    const home = /^https?:\/\/[^/]+\/?$/;
+
+    const expectLoggedOutHeader = async () => {
+      await expect(header.signInLink).toBeVisible();
+      await expect(header.signUpLink).toBeVisible();
+      await expect(header.userLink(user.username)).toHaveCount(0);
+      await expect(header.settingsLink).toHaveCount(0);
+    };
+
+    await settings.open();
+    await expect(settings.heading).toHaveText('Your Settings');
+    await expect(header.userLink(user.username)).toBeVisible();
+    await expect(settings.logoutButton).toBeVisible();
+    await expect(settings.logoutButton).toHaveText('Or click here to logout.');
+    await settings.logoutButton.click();
+
+    await expect(page).toHaveURL(home);
+    await expectLoggedOutHeader(); // before the reload
+
+    await page.reload();
+    await expect(page).toHaveURL(home);
+    await expectLoggedOutHeader(); // after the reload
+
+    await page.goto('/settings');
+    await expect(page).toHaveURL(home);
   },
 );
