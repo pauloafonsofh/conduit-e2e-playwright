@@ -3,25 +3,220 @@
     {
       "title": "smoke",
       "specs": [
-        { "title": "C1 – sign in passes", "tests": [{ "projectName": "smoke", "status": "expected", "annotations": [], "results": [{ "errors": [], "annotations": [] }] }] },
-        { "title": "C5 – sign up page fails", "tests": [{ "projectName": "smoke", "status": "unexpected", "annotations": [], "results": [{ "errors": [{ "message": "\u001b[2mexpect(\u001b[22mpage).toHaveURL(expected) failed\nmore detail" }], "annotations": [] }] }] },
-        { "title": "C10 – sign up is flaky", "tests": [{ "projectName": "smoke", "status": "flaky", "annotations": [], "results": [{ "errors": [{ "message": "first try failed" }], "annotations": [] }, { "errors": [], "annotations": [] }] }] },
-        { "title": "two users created in parallel never collide", "tests": [{ "projectName": "smoke", "status": "expected", "annotations": [], "results": [{ "errors": [], "annotations": [] }] }] }
+        {
+          "title": "C1 – sign in passes",
+          "tests": [
+            {
+              "projectName": "smoke",
+              "status": "expected",
+              "annotations": [],
+              "results": [
+                {
+                  "errors": [],
+                  "annotations": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "C5 – sign up page fails",
+          "tests": [
+            {
+              "projectName": "smoke",
+              "status": "unexpected",
+              "annotations": [],
+              "results": [
+                {
+                  "errors": [
+                    {
+                      "message": "\u001b[2mexpect(\u001b[22mpage).toHaveURL(expected) failed\nmore detail"
+                    }
+                  ],
+                  "annotations": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "C10 – sign up is flaky",
+          "tests": [
+            {
+              "projectName": "smoke",
+              "status": "flaky",
+              "annotations": [],
+              "results": [
+                {
+                  "errors": [
+                    {
+                      "message": "first try failed"
+                    }
+                  ],
+                  "annotations": []
+                },
+                {
+                  "errors": [],
+                  "annotations": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "two users created in parallel never collide",
+          "tests": [
+            {
+              "projectName": "smoke",
+              "status": "expected",
+              "annotations": [],
+              "results": [
+                {
+                  "errors": [],
+                  "annotations": []
+                }
+              ]
+            }
+          ]
+        }
       ],
       "suites": [
         {
           "title": "mutants",
           "specs": [
-            { "title": "C1 – sign in passes [mutant: caught]", "tests": [{ "projectName": "mutants", "status": "expected", "annotations": [], "results": [{ "errors": [], "annotations": [{ "type": "caught-by", "description": "expect(page).toHaveURL(expected) failed" }] }] }] },
-            { "title": "C1 – sign in passes [mutant: survives]", "tests": [{ "projectName": "mutants", "status": "unexpected", "annotations": [], "results": [{ "errors": [{ "message": "Error: Mutant survives survived: the test did not detect the injected defect (x)" }], "annotations": [] }] }] },
-            { "title": "C1 – sign in passes [mutant: timeout]", "tests": [{ "projectName": "mutants", "status": "unexpected", "annotations": [], "results": [{ "errors": [{ "message": "Error: Mutant timeout not caught by an assertion: locator.click: Timeout 30000ms exceeded." }], "annotations": [] }] }] }
+            {
+              "title": "C1 – sign in passes [mutant: caught]",
+              "tests": [
+                {
+                  "projectName": "mutants",
+                  "status": "expected",
+                  "annotations": [],
+                  "results": [
+                    {
+                      "errors": [],
+                      "annotations": [
+                        {
+                          "type": "caught-by",
+                          "description": "expect(page).toHaveURL(expected) failed"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "C1 – sign in passes [mutant: survives]",
+              "tests": [
+                {
+                  "projectName": "mutants",
+                  "status": "unexpected",
+                  "annotations": [],
+                  "results": [
+                    {
+                      "errors": [
+                        {
+                          "message": "Error: Mutant survives survived: the test did not detect the injected defect (x)"
+                        }
+                      ],
+                      "annotations": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "C1 – sign in passes [mutant: timeout]",
+              "tests": [
+                {
+                  "projectName": "mutants",
+                  "status": "unexpected",
+                  "annotations": [],
+                  "results": [
+                    {
+                      "errors": [
+                        {
+                          "message": "Error: Mutant timeout not caught by an assertion: locator.click: Timeout 30000ms exceeded."
+                        }
+                      ],
+                      "annotations": []
+                    }
+                  ]
+                }
+              ]
+            }
           ]
         },
         {
           "title": "known-bugs",
           "specs": [
-            { "title": "Home title bug still present", "tests": [{ "projectName": "known-bugs", "status": "expected", "annotations": [{ "type": "issue", "description": "https://github.com/example/repo/issues/3" }], "results": [{ "errors": [], "annotations": [] }] }] },
-            { "title": "Other bug fixed by the site", "tests": [{ "projectName": "known-bugs", "status": "unexpected", "annotations": [{ "type": "issue", "description": "https://github.com/example/repo/issues/9" }], "results": [{ "errors": [{ "message": "Expected to fail, but passed." }], "annotations": [] }] }] }
+            {
+              "title": "Home title bug still present",
+              "tests": [
+                {
+                  "projectName": "known-bugs",
+                  "status": "expected",
+                  "annotations": [
+                    {
+                      "type": "issue",
+                      "description": "https://github.com/example/repo/issues/3"
+                    }
+                  ],
+                  "results": [
+                    {
+                      "errors": [],
+                      "annotations": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Home title bug, second path",
+              "tests": [
+                {
+                  "projectName": "known-bugs",
+                  "status": "expected",
+                  "annotations": [
+                    {
+                      "type": "issue",
+                      "description": "https://github.com/example/repo/issues/3"
+                    }
+                  ],
+                  "results": [
+                    {
+                      "errors": [],
+                      "annotations": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Other bug fixed by the site",
+              "tests": [
+                {
+                  "projectName": "known-bugs",
+                  "status": "unexpected",
+                  "annotations": [
+                    {
+                      "type": "issue",
+                      "description": "https://github.com/example/repo/issues/9"
+                    }
+                  ],
+                  "results": [
+                    {
+                      "errors": [
+                        {
+                          "message": "Expected to fail, but passed."
+                        }
+                      ],
+                      "annotations": []
+                    }
+                  ]
+                }
+              ]
+            }
           ]
         }
       ]

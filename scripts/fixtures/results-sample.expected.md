@@ -5,7 +5,7 @@
 | Smoke cases (TestRail) | 2/3 passed |
 | Infra tests | 1/1 passed |
 | Mutants | 1/3 caught by an assertion |
-| Known bugs still present | 1/2 |
+| Known-bug tests (bug still present) | 2/3 |
 | Flaky (passed on retry) | 1 |
 
 ### Smoke cases that failed
