@@ -20,8 +20,18 @@ type FeedArticle = { slug: string; title: string; [key: string]: unknown };
 
 /**
  * Each article in the feed takes `field` from the next one, so every preview shows or links the
- * wrong article. A feed with a single article (for example a unique tag) has no neighbour: the
- * slug then points to an article that does not exist, and the title gets a stale suffix.
+ * wrong article.
+ *
+ * Why there is a single-article branch (01/11/2026): C146 and C153 moved from the Global Feed to
+ * the feed of a unique tag, because the Global Feed shows only the 10 newest articles and other
+ * users publish during a run. That feed has one article, so there is no neighbour to rotate with,
+ * and without this branch the feed would arrive unchanged and the mutants would not inject anything.
+ * The branch adapts the mutant to the new scenario, not to the test: each mutant still simulates
+ * the same defect, with the only data a one-article feed offers:
+ * - slug ("preview opens another article"): the preview links to an article that is not the one
+ *   shown (here, a slug that does not exist);
+ * - title ("preview shows another title"): the preview shows a title that is not the article's
+ *   current title (here, the title with " (old version)").
  */
 function rotate(articles: FeedArticle[], field: 'slug' | 'title'): FeedArticle[] {
   if (articles.length === 1) {
