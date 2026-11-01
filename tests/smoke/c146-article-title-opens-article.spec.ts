@@ -18,14 +18,22 @@ smokeCase(
     const home = new HomePage(authedPage);
     const article = new ArticlePage(authedPage);
     const title = uniqueName('Preview article');
+    // A unique tag: the tag feed shows only this article, while the Global Feed shows only the
+    // 10 newest articles and other users publish on the same instance during the run.
+    const tag = uniqueName('pqa-tag');
 
     // Created by the same user as authedPage (both use the `user` fixture of this test).
-    const { slug } = await createArticle(request, user, { title, description: uniqueName('Description'), body: uniqueName('Body') });
+    const { slug } = await createArticle(request, user, {
+      title,
+      description: uniqueName('Description'),
+      body: uniqueName('Body'),
+      tagList: [tag],
+    });
     articles.track(slug);
 
     await authedPage.goto('/');
-    await expect(home.globalFeedTab).toBeVisible();
-    await home.globalFeedTab.click();
+    await expect(home.popularTag(tag)).toBeVisible();
+    await home.popularTag(tag).click();
     await expect(home.previewTitle(title)).toBeVisible();
     await home.previewTitle(title).click();
     await expect(authedPage).toHaveURL(new RegExp(`/article/${slug}/?$`));
