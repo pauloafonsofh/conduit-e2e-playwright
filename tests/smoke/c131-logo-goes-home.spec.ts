@@ -14,8 +14,17 @@ smokeCase(
   'User should be redirected to the Home page after clicking the "conduit" logo in the upper left corner',
   { mutants: [homeLinksBroken, logoWithoutLabel] },
   async ({ page }) => {
-    // TODO(Paulo): steps and assertions.
-    // Start on a page other than Home (for example /user/login); starting on Home would prove nothing.
-    // Mutants: keep at least one; each must make an assertion fail (see mutants/home.ts).
+    const header = new Header(page);
+    const home = new HomePage(page);
+    await page.goto('/user/login');
+    await expect(page).toHaveURL(/\/user\/login\/?$/);
+    await expect(home.banner).toBeHidden();
+    await expect(header.logo).toBeVisible();
+    await expect(header.logo).toHaveText('conduit');
+    await expect(header.logo).toHaveAttribute('href', '/');
+    await header.logo.click();
+    await expect(page).toHaveURL(/^https?:\/\/[^/]+\/$/);
+    await expect(home.banner).toBeVisible();
+    await expect(home.globalFeedTab).toBeVisible();
   },
 );
