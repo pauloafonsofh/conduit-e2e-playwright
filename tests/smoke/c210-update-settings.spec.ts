@@ -14,11 +14,36 @@ smokeCase(
   'C210',
   'User should be able to update the settings by clicking the [Update Settings] button with valid values',
   { mutants: [settingsNotSaved, settingsRejected] },
-  async ({ authedPage, user }) => {
-    // TODO(Paulo): steps and assertions.
-    // Change fields that do not end the session, such as bio (and image): the JWT carries the username, so changing username or email of the fixture user is a different case.
-    // After [Update Settings] the app opens /profile/<username>; ProfilePage reads the username (h4) and the bio.
-    // To prove the change was saved, check the profile after a reload.
-    // Mutants: keep at least one; each must make an assertion fail (see mutants/settings.ts).
+  async ({ authedPage: page, user }) => {
+    const settings = new SettingsPage(page);
+    const profile = new ProfilePage(page);
+    const bio = uniqueName('QA bio');
+    const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    await settings.open();
+    await expect(settings.heading).toHaveText('Your Settings');
+    await expect(settings.username).toHaveValue(user.username);
+    await expect(settings.email).toHaveValue(user.email);
+
+    const putUser = page
+      .waitForResponse(
+        (r) => r.request().method() === 'PUT' && /\/api\/user\/?$/.test(new URL(r.url()).pathname),
+        { timeout: 10_000 },
+      )
+      .catch(() => null);
+    await settings.update({ bio });
+    const response = await putUser;
+    expect(response, 'PUT /api/user was not sent').not.toBeNull();
+    expect(response!.status(), await response!.text()).toBe(200);
+
+    const profileUrl = new RegExp(`/profile/${escapeRe(user.username)}/?$`);
+    await expect(page).toHaveURL(profileUrl);
+    await expect(profile.username).toHaveText(user.username);
+    await expect(profile.bio).toHaveText(bio);
+
+    await page.reload();
+    await expect(page).toHaveURL(profileUrl);
+    await expect(profile.username).toHaveText(user.username);
+    await expect(profile.bio).toHaveText(bio);
   },
 );
