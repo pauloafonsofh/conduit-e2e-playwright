@@ -1,0 +1,142 @@
+name: e2e
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  # Smoke only, every Monday at 08:00 in Teresina (11:00 UTC). Each run creates users and articles
+  # on a public instance shared with other students, so the full suite runs only on changes.
+  schedule:
+    - cron: '0 11 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Every job runs in the official Playwright image (mcr.microsoft.com/playwright:v1.64.1-noble):
+# Chromium and its system libraries come with it, so there is no apt-get step, and the tag pins
+# the same Playwright version as package.json. Update both together.
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container: mcr.microsoft.com/playwright:v1.64.1-noble
+    steps:
+      - uses: actions/checkout@v7
+      - run: npm ci
+      - run: npm run typecheck
+      - name: CI summary script works
+        run: npm run test:summary
+      - name: Smoke cases and infra tests
+        run: npx playwright test --project=smoke
+      - name: Job summary
+        if: always()
+        run: test -f test-results/results.json && node scripts/summary.mjs >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Upload blob report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: blob-smoke
+          path: blob-report/
+          retention-days: 7
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: report-smoke
+          path: playwright-report/
+          retention-days: 14
+
+  known-bugs:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container: mcr.microsoft.com/playwright:v1.64.1-noble
+    steps:
+      - uses: actions/checkout@v7
+      - run: npm ci
+      # Each test uses test.fail(): it passes while the bug exists and fails when the site fixes it.
+      - name: Known bugs
+        run: npx playwright test --project=known-bugs --pass-with-no-tests
+      - name: Job summary
+        if: always()
+        run: test -f test-results/results.json && node scripts/summary.mjs >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Upload blob report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: blob-known-bugs
+          path: blob-report/
+          retention-days: 7
+
+  mutants:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    container: mcr.microsoft.com/playwright:v1.64.1-noble
+    steps:
+      - uses: actions/checkout@v7
+      - run: npm ci
+      - name: Mutant mechanism works (harness)
+        run: npm run test:harness
+      # Inverted logic: a mutant test passes only when the injected defect makes an assertion fail.
+      # This job fails if any mutant survives or breaks the test in another way (timeout, navigation).
+      - name: Mutants
+        run: npx playwright test --project=mutants
+      - name: Job summary
+        if: always()
+        run: test -f test-results/results.json && node scripts/summary.mjs >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Upload blob report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: blob-mutants
+          path: blob-report/
+          retention-days: 7
+
+  # Merges the three reports, publishes the HTML report and the badge numbers on GitHub Pages.
+  # Only for main (push or manual run) and only once the repository is public.
+  report:
+    needs: [smoke, known-bugs, mutants]
+    if: >-
+      always() && github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container: mcr.microsoft.com/playwright:v1.64.1-noble
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - run: npm ci
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: blob-*
+          path: all-blob-reports
+          merge-multiple: true
+      - name: Merge reports
+        run: |
+          npx playwright merge-reports --reporter=html ./all-blob-reports
+          PLAYWRIGHT_JSON_OUTPUT_NAME=merged-results.json npx playwright merge-reports --reporter=json ./all-blob-reports
+      - name: Badges and summary
+        run: |
+          mkdir -p site
+          cp -r playwright-report/. site/
+          node scripts/summary.mjs merged-results.json --badges site/badges >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v5
