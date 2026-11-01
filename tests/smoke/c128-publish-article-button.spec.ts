@@ -6,7 +6,6 @@
 import { smokeCase } from '../../support/smoke-case';
 import { expect } from '../../support/fixtures';
 import { uniqueName } from '../../support/api';
-import { Header } from '../../pages/header';
 import { EditorPage } from '../../pages/editor-page';
 import { ArticlePage } from '../../pages/article-page';
 import { publishRejected, articleTitleTruncated } from '../../mutants/new-article';
@@ -15,10 +14,27 @@ smokeCase(
   'C128',
   'User should be able to publish an article by clicking the [Publish Article] button',
   { mutants: [publishRejected, articleTitleTruncated] },
-  async ({ authedPage, user, articles }) => {
-    // TODO(Paulo): steps and assertions.
-    // Article data: build the title with uniqueName() from support/api, so parallel runs never collide. Required fields: title, description, body.
-    // Cleanup: right after reaching the article page, call articles.track(new ArticlePage(authedPage).slug()), so the article is deleted even if a later assertion fails.
-    // Mutants: keep at least one; each must make an assertion fail (see mutants/new-article.ts).
+  async ({ authedPage, articles }) => {
+    const uid = uniqueName();
+    const data = { title: `Smoke C128 publish ${uid}`, description: `Description ${uid}`, body: `Text ${uid}` };
+    const editor = new EditorPage(authedPage);
+    const article = new ArticlePage(authedPage);
+
+    await editor.open();
+    await editor.fill(data);
+    await expect(editor.publishButton).toBeVisible();
+    await expect(editor.publishButton).toHaveText('Publish Article');
+    await expect(editor.publishButton).toBeEnabled();
+
+    const created = authedPage
+      .waitForResponse(r => r.request().method() === 'POST' && /\/api\/articles\/?$/.test(r.url()), { timeout: 15_000 })
+      .catch(() => null);
+    await editor.publishButton.click();
+    const resp = await created;
+    if (resp?.ok()) articles.track((await resp.json()).article.slug);
+
+    await expect(authedPage).toHaveURL(/\/article\/[^/?#]+\/?$/);
+    await expect(article.title).toHaveText(data.title);
+    await expect(article.body).toHaveText(data.body);
   },
 );
